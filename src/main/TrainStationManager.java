@@ -8,7 +8,8 @@ import java.io.IOException;
 import data_structures.ArrayList;
 import data_structures.HashTableSC;
 //import data_structures.LinkedListStack;
-import data_structures.LinkedStack;
+//import data_structures.LinkedStack;
+import data_structures.ArrayListStack;
 import data_structures.SimpleHashFunction;
 
 import data_structures.HashSet;
@@ -20,16 +21,18 @@ import interfaces.Stack;
 import interfaces.Set;
 
 public class TrainStationManager {
-	private Map<String,List<Station>> T_Station_Manager = new HashTableSC<String, List<Station>>(1, new SimpleHashFunction<String>());
+	private Map<String,List<Station>> Stations = new HashTableSC<String, List<Station>>(1, new SimpleHashFunction<String>());
 //	private Map<String,Double> Travel_Times = new HashTableSC<String, Double>(1, new SimpleHashFunction<String>());
-	private Map<String,Station> Shortest_Distance = new HashTableSC<String, Station>(1, new SimpleHashFunction<String>());
-	private Stack<Station> toVisit = new LinkedStack<Station>();
+	private Map<String,Station> Shortest_Routes = new HashTableSC<String, Station>(1, new SimpleHashFunction<String>());
+	private Stack<Station> toVisit = new ArrayListStack<Station>();
 	
-//	private Stack<Station> Discovered = new LinkedStack<Station>();
+//	private Set<Station> Visited= new HashSet<Station>();
 	private Set<Station> Visited= new HashSet<Station>();
 	
+	private List<Station> visitedList=new ArrayList<Station>();
+	
 	public TrainStationManager() {
-		this("stations.csv");
+		this("stations.csv"); //se cambio para test
 	}	
 	public TrainStationManager(String station_file) {
 		// INPUT DATA
@@ -45,23 +48,22 @@ public class TrainStationManager {
 				String line;
 
 				try {
+					station_Reader.readLine(); //skips the first line
 					while ((line = station_Reader.readLine()) != null) {
 						
 						String[] data = line.split(",");
 						
-						if(data[0].equals("src_city")) continue;
-						
 						Station s=new Station(data[1], Integer.valueOf(data[2]));
 						
-						if(T_Station_Manager.containsKey(data[0])) {
-							List<Station> stations=T_Station_Manager.get(data[0]);
+						if(Stations.containsKey(data[0])) {
+							List<Station> stations=Stations.get(data[0]);
 							stations.add(s);
-							T_Station_Manager.put(data[0], stations);
+							Stations.put(data[0], stations);
 							
 						}else {
 							List<Station> stations=new ArrayList<Station>();
 							stations.add(s);
-							T_Station_Manager.put(data[0], stations);
+							Stations.put(data[0], stations);
 						}
 						
 				
@@ -71,102 +73,119 @@ public class TrainStationManager {
 					e.printStackTrace();
 				}
 				
-			//first station setup
-				List<String> kys=T_Station_Manager.getKeys();
-				List<List<Station>> vls=T_Station_Manager.getValues();
+				//se anaden los que faltan
+				List<String> kys=Stations.getKeys();
+				List<List<Station>> vls=Stations.getValues();
+				Set<String> missing_stations= new HashSet<String>();
 				
 				for(int i=0;i<vls.size();i++) {
-					String s1_name=kys.get(i);
-					
 					for(int j=0;j<vls.get(i).size();j++) {
-						String s2_name=vls.get(i).get(j).getCityName();
-						Integer s2_dist=vls.get(i).get(j).getDistance();
+						Station station=vls.get(i).get(j);
+						//si el nombre no esta
+						if(!Stations.containsKey(station.getCityName())) {
+							
+							Station missing=new Station(kys.get(i),vls.get(i).get(j).getDistance());
+							List<Station> blank=new ArrayList<Station>();
+							
+							blank.add(missing);
+							Stations.put(station.getCityName(), blank);
+							missing_stations.add(station.getCityName());
+							
+						}
+						else if(missing_stations.isMember(station.getCityName())){
+							List<Station> outdated= Stations.get(station.getCityName());
+							for(Station s:outdated) {
+								if(s.getDistance()!=vls.get(i).get(j).getDistance()){
+									Station missing_station=new Station(kys.get(i),vls.get(i).get(j).getDistance());
+									outdated.add(missing_station);
+									break;
+								}
+							}
+						}
 						
-						Station to_add=new Station(s1_name,s2_dist);
-						List<Station> to_add_list=new ArrayList<Station>();
-						to_add_list.add(to_add);
-						T_Station_Manager.put(s2_name, to_add_list);
 					}
 				}
 				
-				kys=T_Station_Manager.getKeys();
 				
 				
-				Station s=new Station("Westside",Integer.MAX_VALUE);
-				
-				for( String k:kys) {
-					Shortest_Distance.put(k, s);
-				}
-					
-				
-			//Main
-				//after setup
-				
-				
-				s=new Station("Westside",0);
-				toVisit.push(s);
-				Shortest_Distance.put("Westside", s);
-				while(!toVisit.isEmpty()) {
-					Station currStation = toVisit.pop();
-					Visited.add(currStation);
-					
-					//neighbors
-					List<Station> neighbors=T_Station_Manager.get(currStation.getCityName());
-						
-						
-					for(int j=0;j<neighbors.size();j++) {
-						Station n=neighbors.get(j); //Buga
-						Station n_dist=Shortest_Distance.get(currStation.getCityName());
-						Integer calc_dist=n.getDistance()+n_dist.getDistance();
-						
-						//se modifica la distancia
-						if(calc_dist<Shortest_Distance.get(n.getCityName()).getDistance()) {
-							Station mod_n=new Station(currStation.getCityName(),calc_dist);
-							Shortest_Distance.put(n.getCityName(), mod_n);
-						}
-						//se anade al toVisit
-						if(!Visited.isMember(n)) {
-							sortStack(n, toVisit);
-						}
-						
-									
-					}
-					
-					
-						
-					
-				}
-				
-				
+				findShortestDistance();
 				
 
 	}
 	
 	private void findShortestDistance() {
+		List<String> kys=Stations.getKeys();
+		Station s=new Station("Westside",Integer.MAX_VALUE);
+		
+		for( String k:kys) {
+			Shortest_Routes.put(k, s);
+		}
+			
+		
+	//Main
+		//after setup (Westside,INFINITE)
+		//start
+		s=new Station("Westside",0);
+		toVisit.push(s);
+		Shortest_Routes.put("Westside", s);
+		
+		
+		while(!toVisit.isEmpty()) {
+			Station currStation = toVisit.pop();
+			Visited.add(currStation);
+			//visitedList.add(currStation);
+			
+			
+			//neighbors
+			List<Station> neighbors=Stations.get(currStation.getCityName());
+			
+			//problema, todos los neighbors del curr station siguen anadiendose
 				
+				
+			for(int j=0;j<neighbors.size();j++) {
+				Station n=neighbors.get(j);
+				Station c=Shortest_Routes.get(currStation.getCityName());
+				
+				Integer a=Shortest_Routes.get(n.getCityName()).getDistance();
+				Integer b_and_c=n.getDistance()+c.getDistance();
+				
+				
+				//se modifica la distancia
+				if(a>b_and_c) {
+					Station mod_n=new Station(currStation.getCityName(),b_and_c);
+					Shortest_Routes.put(n.getCityName(), mod_n);
+				}
+				
+				//se anade al toVisit
+				if(!Visited.isMember(n)) {   //error esta en esta linea porque se repiten en el tovisit
+					sortStack(n, toVisit);
+				}
+				
+							
+			}
+					
+		}
+		
+		
+		
 	}
 
 	public void sortStack(Station station, Stack<Station> stackToSort) {
 		
-		Stack<Station> left=new LinkedStack<Station>();
-		Stack<Station> right=new LinkedStack<Station>();
+		Stack<Station> tempStack=new ArrayListStack<Station>();
+	
+		stackToSort.push(station);
 	
 		while(!stackToSort.isEmpty()) {
-			left.push(stackToSort.pop());
-		}
-		
-		left.push(station);
-	
-		while(!left.isEmpty()) {
-			Station temp=left.pop();
-			while(!right.isEmpty() && temp.getDistance()>right.top().getDistance()) {
-				left.push(right.pop());
+			Station temp=stackToSort.pop();
+			while(!tempStack.isEmpty() && temp.getDistance()<tempStack.top().getDistance()) {
+				stackToSort.push(tempStack.pop());
 			}
-			right.push(temp);
+			tempStack.push(temp);
 		}
 	
-		while(!right.isEmpty()) {
-			stackToSort.push(right.pop());
+		while(!tempStack.isEmpty()) {
+			stackToSort.push(tempStack.pop());
 		}
 	}
 	
@@ -184,23 +203,23 @@ public class TrainStationManager {
 //
 //
 	public Map<String, List<Station>> getStations() {
-		return T_Station_Manager;
+		return Stations;
 	}
 
 
-	public void setStations(Map<String, List<Station>> cities) {
-		
-	}
+//	public void setStations(Map<String, List<Station>> cities) {
+//		this.Stations=cities;
+//	}
 
 
 	public Map<String, Station> getShortestRoutes() {
-		return Shortest_Distance;
+		return Shortest_Routes;
 	}
 
 
-	public void setShortestRoutes(Map<String, Station> shortestRoutes) {
-		
-	}
+//	public void setShortestRoutes(Map<String, Station> shortestRoutes) {
+//		this.Shortest_Routes=shortestRoutes;
+//	}
 	
 	/**
 	 * BONUS EXERCISE THIS IS OPTIONAL
@@ -218,21 +237,37 @@ public class TrainStationManager {
 	
 	public static void main(String[] args) {
 		TrainStationManager tsm = new TrainStationManager();
-		List<String> keys = tsm.T_Station_Manager.getKeys();
-		List<List<Station>> vals = tsm.T_Station_Manager.getValues();
+//		List<String> keys = tsm.T_Station_Manager.getKeys();
+//		List<List<Station>> vals = tsm.T_Station_Manager.getValues();
+//		
+//		for(String k:keys) {
+//			System.out.println(k);
+//		}
+//		
+//		for(int i=0;i<vals.size();i++) {
+//			for(int j=0;j<vals.get(i).size();j++) {
+//				System.out.println(vals.get(i).get(j));
+//			}
+//			System.out.println();
+//			System.out.println();
+//		}
 		
-		for(String k:keys) {
-			System.out.println(k);
+		Map<String,Station> shrt = tsm.getShortestRoutes();
+		List<String> k =shrt.getKeys();
+		List<Station> v =shrt.getValues();
+		
+		for(int i=0;i<shrt.size();i++) {
+			System.out.println(k.get(i));
+			System.out.println(v.get(i));
 		}
 		
-		for(int i=0;i<vals.size();i++) {
-			for(int j=0;j<vals.get(i).size();j++) {
-				System.out.println(vals.get(i).get(j));
-			}
-			System.out.println();
-			System.out.println();
+		Map<String,List<Station>> stns= tsm.getStations();
+		List<String> ki =stns.getKeys();
+		List<List<Station>> vi=stns.getValues();
+		for(int i=0;i<stns.size();i++) {
+			System.out.println(ki.get(i));
+			System.out.println(vi.get(i));
 		}
-		
 		
 	}
 

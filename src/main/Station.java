@@ -1,7 +1,7 @@
 package main;
 
 public class Station {
-	
+	//comentar cuando termine
 	//private properties
 	private String name;
 	private Integer distance;
