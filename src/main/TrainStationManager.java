@@ -22,14 +22,7 @@ import interfaces.Set;
 
 public class TrainStationManager {
 	private Map<String,List<Station>> Stations = new HashTableSC<String, List<Station>>(1, new SimpleHashFunction<String>());
-//	private Map<String,Double> Travel_Times = new HashTableSC<String, Double>(1, new SimpleHashFunction<String>());
 	private Map<String,Station> Shortest_Routes = new HashTableSC<String, Station>(1, new SimpleHashFunction<String>());
-	private Stack<Station> toVisit = new ArrayListStack<Station>();
-	
-//	private Set<Station> Visited= new HashSet<Station>();
-	private Set<Station> Visited= new HashSet<Station>();
-	
-	private List<Station> visitedList=new ArrayList<Station>();
 	
 	public TrainStationManager() {
 		this("stations.csv"); //se cambio para test
@@ -40,73 +33,52 @@ public class TrainStationManager {
 				BufferedReader station_Reader = null;
 				try {
 					station_Reader = new BufferedReader(new FileReader("inputFiles/" + station_file));
-					
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-				}
+				} catch (FileNotFoundException e) {}
 
 				String line;
-
 				try {
 					station_Reader.readLine(); //skips the first line
 					while ((line = station_Reader.readLine()) != null) {
 						
 						String[] data = line.split(",");
-						
 						Station s=new Station(data[1], Integer.valueOf(data[2]));
 						
 						if(Stations.containsKey(data[0])) {
-							List<Station> stations=Stations.get(data[0]);
-							stations.add(s);
-							Stations.put(data[0], stations);
+							Stations.get(data[0]).add(s);
 							
 						}else {
 							List<Station> stations=new ArrayList<Station>();
 							stations.add(s);
 							Stations.put(data[0], stations);
 						}
-						
-				
 					}
 
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				} catch (IOException e) {}
 				
 				//se anaden los que faltan
-				List<String> kys=Stations.getKeys();
-				List<List<Station>> vls=Stations.getValues();
-				Set<String> missing_stations= new HashSet<String>();
-				
-				for(int i=0;i<vls.size();i++) {
-					for(int j=0;j<vls.get(i).size();j++) {
-						Station station=vls.get(i).get(j);
-						//si el nombre no esta
-						if(!Stations.containsKey(station.getCityName())) {
-							
-							Station missing=new Station(kys.get(i),vls.get(i).get(j).getDistance());
-							List<Station> blank=new ArrayList<Station>();
-							
-							blank.add(missing);
-							Stations.put(station.getCityName(), blank);
-							missing_stations.add(station.getCityName());
-							
-						}
-						else if(missing_stations.isMember(station.getCityName())){
-							List<Station> outdated= Stations.get(station.getCityName());
-							for(Station s:outdated) {
-								if(s.getDistance()!=vls.get(i).get(j).getDistance()){
-									Station missing_station=new Station(kys.get(i),vls.get(i).get(j).getDistance());
-									outdated.add(missing_station);
-									break;
-								}
-							}
-						}
+				int i=0;
+				for(List<Station> src_cities:Stations.getValues()) {
+					
+					String src_cityName=Stations.getKeys().get(i);
+					for(Station dest_city:src_cities) {
+						String dest_cityName=dest_city.getCityName();
 						
+						//si el nombre no esta
+						Station missing=new Station(src_cityName,dest_city.getDistance());
+						if(!Stations.containsKey(dest_cityName)) {
+							
+							List<Station> blank=new ArrayList<Station>();
+							blank.add(missing);
+							Stations.put(dest_cityName, blank);
+							
+							
+						}else if (!Stations.get(dest_cityName).contains(missing))
+							Stations.get(dest_cityName).add(missing);  //si el nombre esta, y le falta la estacion
+								
 					}
+					
+					i++; //changes src_cityName
 				}
-				
-				
 				
 				findShortestDistance();
 				
@@ -114,50 +86,42 @@ public class TrainStationManager {
 	}
 	
 	private void findShortestDistance() {
-		List<String> kys=Stations.getKeys();
-		Station s=new Station("Westside",Integer.MAX_VALUE);
+		Stack<Station> toVisit = new ArrayListStack<Station>();
+		Set<Station> Visited= new HashSet<Station>();
 		
-		for( String k:kys) {
-			Shortest_Routes.put(k, s);
+		for(String src_city: Stations.getKeys()) {
+			Shortest_Routes.put(src_city, new Station("Westside",Integer.MAX_VALUE)); //setting all src_cities initial position in Westside
 		}
 			
-		
-	//Main
-		//after setup (Westside,INFINITE)
 		//start
-		s=new Station("Westside",0);
-		toVisit.push(s);
-		Shortest_Routes.put("Westside", s);
+		toVisit.push(new Station("Westside",0));
+		Shortest_Routes.put("Westside", new Station("Westside",0));
 		
 		
 		while(!toVisit.isEmpty()) {
 			Station currStation = toVisit.pop();
 			Visited.add(currStation);
-			//visitedList.add(currStation);
 			
 			
 			//neighbors
 			List<Station> neighbors=Stations.get(currStation.getCityName());
 			
-			//problema, todos los neighbors del curr station siguen anadiendose
-				
-				
 			for(int j=0;j<neighbors.size();j++) {
 				Station n=neighbors.get(j);
 				Station c=Shortest_Routes.get(currStation.getCityName());
 				
-				Integer a=Shortest_Routes.get(n.getCityName()).getDistance();
-				Integer b_and_c=n.getDistance()+c.getDistance();
+				Integer prev_dist=Shortest_Routes.get(n.getCityName()).getDistance();
+				Integer calc_dist=n.getDistance()+c.getDistance();
 				
 				
 				//se modifica la distancia
-				if(a>b_and_c) {
-					Station mod_n=new Station(currStation.getCityName(),b_and_c);
+				if(prev_dist>calc_dist) {
+					Station mod_n=new Station(currStation.getCityName(),calc_dist);
 					Shortest_Routes.put(n.getCityName(), mod_n);
 				}
 				
 				//se anade al toVisit
-				if(!Visited.isMember(n)) {   //error esta en esta linea porque se repiten en el tovisit
+				if(!Visited.isMember(n)) {   
 					sortStack(n, toVisit);
 				}
 				
@@ -252,14 +216,14 @@ public class TrainStationManager {
 //			System.out.println();
 //		}
 		
-		Map<String,Station> shrt = tsm.getShortestRoutes();
-		List<String> k =shrt.getKeys();
-		List<Station> v =shrt.getValues();
-		
-		for(int i=0;i<shrt.size();i++) {
-			System.out.println(k.get(i));
-			System.out.println(v.get(i));
-		}
+//		Map<String,Station> shrt = tsm.getShortestRoutes();
+//		List<String> k =shrt.getKeys();
+//		List<Station> v =shrt.getValues();
+//		
+//		for(int i=0;i<shrt.size();i++) {
+//			System.out.println(k.get(i));
+//			System.out.println(v.get(i));
+//		}
 		
 		Map<String,List<Station>> stns= tsm.getStations();
 		List<String> ki =stns.getKeys();
