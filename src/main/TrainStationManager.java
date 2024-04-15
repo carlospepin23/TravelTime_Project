@@ -23,6 +23,7 @@ import interfaces.Set;
 public class TrainStationManager {
 	private Map<String,List<Station>> Stations = new HashTableSC<String, List<Station>>(1, new SimpleHashFunction<String>());
 	private Map<String,Station> Shortest_Routes = new HashTableSC<String, Station>(1, new SimpleHashFunction<String>());
+	private Map<String,List<String>> stationStops = new HashTableSC<String, List<String>>(1, new SimpleHashFunction<String>());
 	
 	public TrainStationManager() {
 		this("stations.csv"); //se cambio para test
@@ -80,14 +81,18 @@ public class TrainStationManager {
 					i++; //changes src_cityName
 				}
 				
-				findShortestDistance();
+				for(String src_city:Stations.getKeys()) {
+					stationStops.put(src_city, new ArrayList<String>());
+					stationStops.get(src_city).add("Westside");
+				}
 				
-
+				findShortestDistance();
 	}
 	
 	private void findShortestDistance() {
 		Stack<Station> toVisit = new ArrayListStack<Station>();
 		Set<Station> Visited= new HashSet<Station>();
+		
 		
 		for(String src_city: Stations.getKeys()) {
 			Shortest_Routes.put(src_city, new Station("Westside",Integer.MAX_VALUE)); //setting all src_cities initial position in Westside
@@ -97,11 +102,9 @@ public class TrainStationManager {
 		toVisit.push(new Station("Westside",0));
 		Shortest_Routes.put("Westside", new Station("Westside",0));
 		
-		
 		while(!toVisit.isEmpty()) {
 			Station currStation = toVisit.pop();
 			Visited.add(currStation);
-			
 			
 			//neighbors
 			List<Station> neighbors=Stations.get(currStation.getCityName());
@@ -109,29 +112,24 @@ public class TrainStationManager {
 			for(int j=0;j<neighbors.size();j++) {
 				Station n=neighbors.get(j);
 				Station c=Shortest_Routes.get(currStation.getCityName());
-				
 				Integer prev_dist=Shortest_Routes.get(n.getCityName()).getDistance();
 				Integer calc_dist=n.getDistance()+c.getDistance();
 				
 				
 				//se modifica la distancia
 				if(prev_dist>calc_dist) {
-					Station mod_n=new Station(currStation.getCityName(),calc_dist);
-					Shortest_Routes.put(n.getCityName(), mod_n);
+					Station mod_city=new Station(currStation.getCityName(),calc_dist);
+					Shortest_Routes.put(n.getCityName(), mod_city);
 				}
-				
+
+								
 				//se anade al toVisit
 				if(!Visited.isMember(n)) {   
 					sortStack(n, toVisit);
-				}
-				
-							
-			}
 					
+				}
+			}
 		}
-		
-		
-		
 	}
 
 	public void sortStack(Station station, Stack<Station> stackToSort) {
@@ -155,19 +153,38 @@ public class TrainStationManager {
 	
 	
 	public Map<String, Double> getTravelTimes() {
-		// 5 minutes per kilometer
-		// 15 min per station
 		Map<String,Double> Travel_Times = new HashTableSC<String, Double>(1, new SimpleHashFunction<String>());
-		
-		
+
+		List<String> dest_cities=Shortest_Routes.getKeys();
+		List<Station> src_cities=Shortest_Routes.getValues();
+			
+		for(int i=0;i<dest_cities.size();i++) {
+			String d=dest_cities.get(i);        //left
+			Station s = src_cities.get(i);		//right
+			String curr=d;
+			
+			Integer station_stops=-1; //starts at Westside
+			while(curr!="Westside") {
+				stationStops.get(d).add(1, curr);
+				curr=Shortest_Routes.get(curr).getCityName();
+				station_stops++;
+			}
+			if(d=="Westside") {
+				station_stops=0;
+			}
+			Travel_Times.put(d, (s.getDistance()*2.5)+(15*station_stops));
+		}
+
 		return Travel_Times;
 		
 		
 	}
+	
+	
 //
 //
 	public Map<String, List<Station>> getStations() {
-		return Stations;
+		return this.Stations;
 	}
 
 
@@ -177,8 +194,13 @@ public class TrainStationManager {
 
 
 	public Map<String, Station> getShortestRoutes() {
-		return Shortest_Routes;
+		return this.Shortest_Routes;
 	}
+	
+//	//added
+//	public Map<String, List<String>> getStationStops() {
+//		return this.stationStops;
+//	}
 
 
 //	public void setShortestRoutes(Map<String, Station> shortestRoutes) {
@@ -195,43 +217,49 @@ public class TrainStationManager {
 	 * @return (String) String representation of the path taken to reach stationName.
 	 */
 	public String traceRoute(String stationName) {
-		// Remove if you implement the method, otherwise LEAVE ALONE
-		throw new UnsupportedOperationException();
+		getTravelTimes();
+		List<String> src_cities=stationStops.get(stationName);
+		
+		String traceRoute="";
+		
+		for(int i=0;i<src_cities.size();i++) {
+			traceRoute+=src_cities.get(i);
+			if(i+1!=src_cities.size()) {
+				traceRoute+="->";
+			}
+		}
+		
+//		System.out.println(traceRoute);
+		return traceRoute;
 	}
 	
 	public static void main(String[] args) {
 		TrainStationManager tsm = new TrainStationManager();
-//		List<String> keys = tsm.T_Station_Manager.getKeys();
-//		List<List<Station>> vals = tsm.T_Station_Manager.getValues();
-//		
-//		for(String k:keys) {
-//			System.out.println(k);
-//		}
-//		
-//		for(int i=0;i<vals.size();i++) {
-//			for(int j=0;j<vals.get(i).size();j++) {
-//				System.out.println(vals.get(i).get(j));
-//			}
-//			System.out.println();
-//			System.out.println();
+
+		
+//		Map<String,List<Station>> stns= tsm.getStations();
+//		List<String> ki =stns.getKeys();
+//		List<List<Station>> vi=stns.getValues();
+//		for(int i=0;i<stns.size();i++) {
+//			System.out.println(ki.get(i));
+//			System.out.println(vi.get(i));
 //		}
 		
-//		Map<String,Station> shrt = tsm.getShortestRoutes();
-//		List<String> k =shrt.getKeys();
-//		List<Station> v =shrt.getValues();
-//		
-//		for(int i=0;i<shrt.size();i++) {
-//			System.out.println(k.get(i));
-//			System.out.println(v.get(i));
+//		Map<String,List<String>> stns= tsm.getStationStops();
+//		List<String> ki =stns.getKeys();
+//		List<List<String>> vi=stns.getValues();
+//		for(int i=0;i<stns.size();i++) {
+//			System.out.println(ki.get(i));
+//			System.out.println(vi.get(i));
 //		}
+//		
+//		
+//		
+//		tsm.traceRoute("Dome");
 		
-		Map<String,List<Station>> stns= tsm.getStations();
-		List<String> ki =stns.getKeys();
-		List<List<Station>> vi=stns.getValues();
-		for(int i=0;i<stns.size();i++) {
-			System.out.println(ki.get(i));
-			System.out.println(vi.get(i));
-		}
+		tsm.getTravelTimes();
+		
+		
 		
 	}
 
