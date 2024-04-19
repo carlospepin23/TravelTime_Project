@@ -1,6 +1,23 @@
 src_city,dest_city,distance
-Westside,Dubay,100
-Westside,Mosbull,92
-Westside,Bugapest,55
-Mosbull,Berlint,64
-Berlint,Dubay,44
+Westside,Dubai,150
+Westside,Paris,120
+Westside,Rome,80
+Paris,Berlin,110
+Berlin,Dubai,90
+Paris,London,150
+London,Boston,100
+London,Istanbul,200
+Chicago,Istanbul,180
+Chicago,London,150
+Istanbul,Rome,160
+Tokyo,Sydney,300
+Sydney,Los Angeles,400
+Cairo,Los Angeles,350
+Dubai,Los Angeles,250
+Paris,Boston,200
+Dubai,Cairo,180
+Cairo,Sydney,450
+Tokyo,Cairo,420
+Cairo,Rome,250
+Boston,Rome,180
+Tokyo,Istanbul,350

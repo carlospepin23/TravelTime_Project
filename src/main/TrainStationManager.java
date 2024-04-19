@@ -24,6 +24,7 @@ public class TrainStationManager {
 	private Map<String,List<Station>> Stations = new HashTableSC<String, List<Station>>(1, new SimpleHashFunction<String>());
 	private Map<String,Station> Shortest_Routes = new HashTableSC<String, Station>(1, new SimpleHashFunction<String>());
 	private Map<String,List<String>> stationStops = new HashTableSC<String, List<String>>(1, new SimpleHashFunction<String>());
+	private Map<String,Double> Travel_Times = new HashTableSC<String, Double>(1, new SimpleHashFunction<String>());
 	
 	public TrainStationManager() {
 		this("stations.csv"); //se cambio para test
@@ -153,7 +154,7 @@ public class TrainStationManager {
 	
 	
 	public Map<String, Double> getTravelTimes() {
-		Map<String,Double> Travel_Times = new HashTableSC<String, Double>(1, new SimpleHashFunction<String>());
+		
 
 		List<String> dest_cities=Shortest_Routes.getKeys();
 		List<Station> src_cities=Shortest_Routes.getValues();
@@ -198,9 +199,9 @@ public class TrainStationManager {
 	}
 	
 //	//added
-//	public Map<String, List<String>> getStationStops() {
-//		return this.stationStops;
-//	}
+	public Map<String, List<String>> getStationStops() {
+		return this.stationStops;
+	}
 
 
 //	public void setShortestRoutes(Map<String, Station> shortestRoutes) {
@@ -228,15 +229,13 @@ public class TrainStationManager {
 				traceRoute+="->";
 			}
 		}
-		
-//		System.out.println(traceRoute);
 		return traceRoute;
 	}
 	
 	public static void main(String[] args) {
-		TrainStationManager tsm = new TrainStationManager();
-
-		
+//		TrainStationManager tsm = new TrainStationManager();
+//
+////		
 //		Map<String,List<Station>> stns= tsm.getStations();
 //		List<String> ki =stns.getKeys();
 //		List<List<Station>> vi=stns.getValues();
@@ -244,20 +243,40 @@ public class TrainStationManager {
 //			System.out.println(ki.get(i));
 //			System.out.println(vi.get(i));
 //		}
-		
-//		Map<String,List<String>> stns= tsm.getStationStops();
-//		List<String> ki =stns.getKeys();
-//		List<List<String>> vi=stns.getValues();
-//		for(int i=0;i<stns.size();i++) {
-//			System.out.println(ki.get(i));
-//			System.out.println(vi.get(i));
+//		System.out.println();
+//		System.out.println();
+////		Map<String,List<String>> stns= tsm.getStationStops();
+////		List<String> ki =stns.getKeys();
+////		List<List<String>> vi=stns.getValues();
+//		
+//		Map<String, Station> shrt = tsm.getShortestRoutes();
+//		List<String> k =shrt.getKeys();
+//		List<Station> v=shrt.getValues();
+//		for(int i=0;i<shrt.size();i++) {
+//			System.out.println(k.get(i));
+//			System.out.println(v.get(i));
 //		}
 //		
-//		
-//		
-//		tsm.traceRoute("Dome");
-		
-		tsm.getTravelTimes();
+//		System.out.println();
+//		System.out.println();
+//		Map<String, Double> a = tsm.getTravelTimes();
+////		for(int i=0;i<ki.size();i++) {
+////			tsm.traceRoute(ki.get(i));
+////			System.out.println();
+////		}
+//		List<String>b=a.getKeys();
+//		for(int i=0;i<a.size();i++) {
+//			Double hr=a.get(b.get(i))/60;
+//			Double mins=a.get(b.get(i))-(Math.floor(hr)*60);
+////			(Math.round(hr)*60)
+//			System.out.println(b.get(i));
+//			System.out.println(a.get(b.get(i)));
+////			System.out.println(Integer.toString(i, 0));
+//			System.out.println(hr);
+//			System.out.println(mins);
+//			System.out.println();
+//			
+//		}
 		
 		
 		
