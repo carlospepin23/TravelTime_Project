@@ -2,11 +2,6 @@ package main;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import javax.imageio.ImageIO;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import interfaces.List;
@@ -14,14 +9,25 @@ import interfaces.Map;
 import data_structures.HashTableSC;
 import data_structures.SimpleHashFunction;
 
+/**
+ * The TrainStationGUI class represents the graphical user interface for the train station management system.
+ * It displays the train schedules and departure times for various destinations from Westside Station.
+ * 
+ * @author Carlos J. Pepin Delgado
+ * @version 4/19/2023
+ */
 public class TrainStationGUI extends JFrame {
     
     private Map<String,String> departureTimes;
     private Map<String,Double> travel_times;
     private List<String> stations;
     private TrainStationManager tsmGUI;
-    private Image backgroundImage;
     
+    /**
+     * Constructs a new TrainStationGUI object.
+     * Initializes the train station manager, sets departure times, retrieves travel times and station list,
+     * and initializes the graphical user interface.
+     */
     public TrainStationGUI() {
         super("Welcome to Westside Station!");
         tsmGUI = new TrainStationManager();
@@ -30,38 +36,28 @@ public class TrainStationGUI extends JFrame {
         travel_times = tsmGUI.getTravelTimes();
         stations = tsmGUI.getStations().getKeys();
         
-        loadBackgroundImage();
-        initC();
+        initGUI();
     }
     
-    private void loadBackgroundImage() {
-        try {
-            backgroundImage = ImageIO.read(new File("inputFiles/thomas.jpg"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    
-    @Override
-    public void paint(Graphics g) {
-        super.paint(g);
-        if (backgroundImage != null) {
-            g.drawImage(backgroundImage, 0, 0, this.getWidth(), this.getHeight(), this);
-        }
-    }
-    
-    private void initC() {
+    /**
+     * Initializes the graphical user interface by creating a panel to display station schedules and departure times.
+     */
+    private void initGUI() {
         JPanel panel = new JPanel(new GridLayout(getStations().size(), 2));
-        for (int i = 0; i < stations.size(); i++) {
-            if (stations.get(i).equals("Westside")) {
+        for (int i = 0; i < getStations().size(); i++) {
+            if (stations.get(i).equals("Westside")) { //if its Westside skip
                 continue;
             }
-            LocalTime departure = LocalTime.parse(getDepartureTimes().get(getStations().get(i)), DateTimeFormatter.ofPattern("hh:mm a"));
-            LocalTime arrival = departure.plusMinutes(getTravelTimes().get(getStations().get(i)).longValue());
+            //processes departure time
+            LocalTime depart = LocalTime.parse(getDepartureTimes().get(getStations().get(i)), DateTimeFormatter.ofPattern("hh:mm a"));
+            //processes arrival time
+            LocalTime arr = depart.plusMinutes(getTravelTimes().get(getStations().get(i)).longValue());
+            //formatted text in gui
             JLabel stationLabel = new JLabel(getStations().get(i));
             JLabel timesLabel = new JLabel(String.format("Departure: %s, Arrival: %s",
-            		departure.format(DateTimeFormatter.ofPattern("hh:mm a")),
-            		arrival.format(DateTimeFormatter.ofPattern("hh:mm a"))));
+            		depart.format(DateTimeFormatter.ofPattern("hh:mm a")),
+            		arr.format(DateTimeFormatter.ofPattern("hh:mm a"))));
+            
             panel.add(stationLabel);
             panel.add(timesLabel);
         }
@@ -76,6 +72,9 @@ public class TrainStationGUI extends JFrame {
         setVisible(true);
     }
     
+    /**
+     * Sets the departure times for various destinations from Westside Station.
+     */
     public void setDepartureTimes() {
         Map<String,String> dT = new HashTableSC<String, String>(1, new SimpleHashFunction<String>());
         dT.put("Bugapest","09:35 AM");
@@ -93,18 +92,38 @@ public class TrainStationGUI extends JFrame {
         this.departureTimes = dT;
     }
     
+    /**
+     * Retrieves the list of stations.
+     * 
+     * @return The list of stations.
+     */
     public List<String> getStations(){
         return this.stations;
     }
     
+    /**
+     * Retrieves the travel times to various destinations from Westside Station.
+     * 
+     * @return The map of travel times.
+     */
     public Map<String, Double> getTravelTimes(){
         return this.travel_times;
     }
     
+    /**
+     * Retrieves the departure times for various destinations from Westside Station.
+     * 
+     * @return The map of departure times.
+     */
     public Map<String, String> getDepartureTimes(){
         return this.departureTimes;
     }
     
+    /**
+     * The main method to start the train station GUI.
+     * 
+     * @param args The command line arguments.
+     */
     public static void main(String[] args) {
         new TrainStationGUI();
     }

@@ -325,54 +325,40 @@ public class TrainStationManager {
 		return traceRoute;
 	}
 	
+	/**
+	 * Main method that starts the project by creating an TrainStationManager() Object.
+	 * 
+	 * @param args
+	 */
 	public static void main(String[] args) {
-//		TrainStationManager tsm = new TrainStationManager();
-//
-////		
-//		Map<String,List<Station>> stns= tsm.getStations();
-//		List<String> ki =stns.getKeys();
-//		List<List<Station>> vi=stns.getValues();
-//		for(int i=0;i<stns.size();i++) {
-//			System.out.println(ki.get(i));
-//			System.out.println(vi.get(i));
-//		}
-//		System.out.println();
-//		System.out.println();
-////		Map<String,List<String>> stns= tsm.getStationStops();
-////		List<String> ki =stns.getKeys();
-////		List<List<String>> vi=stns.getValues();
-//		
-//		Map<String, Station> shrt = tsm.getShortestRoutes();
-//		List<String> k =shrt.getKeys();
-//		List<Station> v=shrt.getValues();
-//		for(int i=0;i<shrt.size();i++) {
-//			System.out.println(k.get(i));
-//			System.out.println(v.get(i));
-//		}
-//		
-//		System.out.println();
-//		System.out.println();
-//		Map<String, Double> a = tsm.getTravelTimes();
-////		for(int i=0;i<ki.size();i++) {
-////			tsm.traceRoute(ki.get(i));
-////			System.out.println();
-////		}
-//		List<String>b=a.getKeys();
-//		for(int i=0;i<a.size();i++) {
-//			Double hr=a.get(b.get(i))/60;
-//			Double mins=a.get(b.get(i))-(Math.floor(hr)*60);
-////			(Math.round(hr)*60)
-//			System.out.println(b.get(i));
-//			System.out.println(a.get(b.get(i)));
-////			System.out.println(Integer.toString(i, 0));
-//			System.out.println(hr);
-//			System.out.println(mins);
-//			System.out.println();
-//			
-//		}
+		TrainStationManager tsm = new TrainStationManager();
+
+		Map<String,List<Station>> stns= tsm.getStations();
+		List<String> ki =stns.getKeys();
+		List<List<Station>> vi=stns.getValues();
+		for(int i=0;i<stns.size();i++) {
+			System.out.println(ki.get(i));
+			System.out.println(vi.get(i));
+		}
+		System.out.println();
+		System.out.println();
 		
+		Map<String, Station> shrt = tsm.getShortestRoutes();
+		List<String> k =shrt.getKeys();
+		List<Station> v=shrt.getValues();
+		for(int i=0;i<shrt.size();i++) {
+			System.out.println(k.get(i));
+			System.out.println(v.get(i));
+		}
 		
+		System.out.println();
+		System.out.println();
+
+		for(int i=0;i<ki.size();i++) {
+			System.out.println(tsm.traceRoute(ki.get(i)));
+		}
 		
+		new TrainStationGUI();
 	}
 
 }
